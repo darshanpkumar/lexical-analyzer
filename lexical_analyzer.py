@@ -1,50 +1,51 @@
 import re
 from tabulate import tabulate
 
-# ---------------- SOURCE CODE ---------------- #
-source_code = """
-int main()
-begin
-    int n, i, sum = 0;
-    for(i=1; i <= n; ++i)
-    begin
-        expr = expr + expr;
-    end
-end
-"""
+# ---------------- SOURCE CODE FROM FILE ---------------- #
+with open("input.c", "r") as file:
+    source_code = file.read()
+
+print("\nSOURCE CODE:\n")
+print(source_code)
 
 # ---------------- LEXICAL ANALYZER ---------------- #
 token_specification = [
+    #('TOKEN_NAME', 'REGEX_PATTERN')
     ('KEYWORD', r'\b(int|main|begin|end|for)\b'),
-    ('NUMBER', r'\b\d+\b'),
+    ('NUMBER', r'\b\d+\b'),  #d+ one or more digits
     ('IDENTIFIER', r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'),
     ('OPERATOR', r'\+\+|<=|=|\+'),
-    ('SYMBOL', r'[(),;]'),
+    ('SYMBOL', r'[(),;]'), #Matches special char
     ('SKIP', r'[ \t\n]+'),
     ('MISMATCH', r'.'),
 ]
 
-tok_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in token_specification)
+tok_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in token_specification) #creates combined regular expression
 
 tokens = []
 token_id = 1
+seen_tokens = set()
 
-for mo in re.finditer(tok_regex, source_code):
-    kind = mo.lastgroup
-    value = mo.group()
+for mo in re.finditer(tok_regex, source_code): #Scanning of src code
+    kind = mo.lastgroup #gives token type
+    value = mo.group() #gives actual matched text
 
-    if kind == 'SKIP':
+    if kind == 'SKIP':#Ignore Spaces
         continue
-    elif kind == 'MISMATCH':
+    elif kind == 'MISMATCH': #Handle Errors
         raise RuntimeError(f'Unexpected character: {value}')
     
-    tokens.append((kind, value, token_id))
-    token_id += 1
-
-print("TOKEN TABLE:\n")
+    #Considering only unique values
+    if value not in seen_tokens:
+        tokens.append((kind, value, token_id))
+        seen_tokens.add(value)
+        token_id += 1
+print("-----------------------------------\n")
+print("TOKEN TABLE:")
 print(tabulate(tokens, headers=["Type", "Lexeme", "Token ID"], tablefmt="grid"))
 
 # ---------------- SYMBOL TABLE ---------------- #
+#To remove duplicates
 keywords = set()
 identifiers = set()
 literals = set()
@@ -140,6 +141,8 @@ print("\nGRAMMAR:")
 for non_terminal, productions in grammar.items():
     for production in productions:
         print(f"{non_terminal} -> {production}")
+
+
 
 # ---------------- PARSING ACTIONS ---------------- #
 print("\nPARSING ACTIONS:\n")

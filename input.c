@@ -1,0 +1,8 @@
+int main()
+begin
+    int n, i, sum = 0;
+    for(i=1; i <= n; ++i)
+    begin
+        expr = expr + expr;
+    end
+end
